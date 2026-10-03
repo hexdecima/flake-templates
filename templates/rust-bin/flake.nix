@@ -1,31 +1,37 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/release-26.05";
-    parts.url = "github:hercules-ci/flake-parts";
-    naersk.url = "github:nix-community/naersk";
-    rust = {
+    naersk-flake.url = "github:nix-community/naersk";
+    rust-overlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-  outputs = inputs@{ nixpkgs, parts, rust, naersk, ... }:
-    parts.lib.mkFlake { inherit inputs; } {
-      systems = [ "x86_64-linux" "aarch64-linux" ];
+  outputs = inputs@{ nixpkgs, rust, naersk, ... }: let
+    readToml = file: builtins.fromTOML (builtins.readFile file);
+    systems = [ "x86_64-linux" "aarch64-linux" ];
+    overlays = [ (import rust-overlay) ];
+    eachSystem = fn: nixpkgs.lib.genAttrs systems 
+      (system: fn (import nixpkgs { inherit system overlays; }));
+  in {
+    devShells = eachSystem (pkgs: let 
+      toolchain = (readToml ./rust-toolchain.toml).toolchain;
+      rust = pkgs.pkgsBuildHost.rust-bin.fromRustupToolchain {
+        inherit (toolchain) channel components targets; 
+      };
+    in {
+      default = pkgs.mkShell {
+        packages = (with pkgs; [ just bacon nil nixfmt-classic taplo ]) ++ [ rust ];
+      };
+    });
 
-      perSystem = { system, ... }:
-        let
-          overlays = [ (import rust) ];
-          pkgs = import nixpkgs { inherit system overlays; };
-          toolchain = pkgs.pkgsBuildHost.rust-bin.fromRustupToolchainFile
-            ./rust-toolchain.toml;
-          naersk-lib = pkgs.callPackage naersk {
-            cargo = toolchain;
-            rustc = toolchain;
-          };
-        in {
-          devShells.default =
-            pkgs.mkShell { packages = with pkgs; [ toolchain just bacon nil nixfmt-classic taplo ]; };
-          packages.default = naersk-lib.buildPackage { src = ./.; };
+    packages = eachSystem (pkgs: let 
+        naersk = pkgs.callPackage naersk-flake {
+          cargo = toolchain;
+          rustc = toolchain;
         };
-    };
+    in {
+      default = naersk.buildPackage { src = ./.; };
+    });
+  };
 }

@@ -16,7 +16,7 @@
     devShells = eachSystem (pkgs: let 
       toolchain = (readToml ./rust-toolchain.toml).toolchain;
       rustBin = pkgs.pkgsBuildHost.rust-bin.fromRustupToolchain {
-        inherit (toolchainFile) channel components targets; 
+        inherit (toolchain) channel components targets; 
       };
     in {
       default = pkgs.mkShell { packages = with pkgs; [ 
