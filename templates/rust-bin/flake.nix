@@ -21,7 +21,7 @@
       };
     in {
       default = pkgs.mkShell {
-        packages = (with pkgs; [ just bacon nil nixfmt-classic taplo ]) ++ [ rust ];
+        packages = (with pkgs; [ just bacon nil nixfmt taplo ]) ++ [ rust ];
       };
     });
 

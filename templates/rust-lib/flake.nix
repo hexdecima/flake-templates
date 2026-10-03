@@ -20,7 +20,7 @@
       };
     in {
       default = pkgs.mkShell { packages = with pkgs; [ 
-        rustBin just bacon nil nixfmt-classic taplo 
+        rustBin just bacon nil nixfmt taplo 
       ];
       };
     });
