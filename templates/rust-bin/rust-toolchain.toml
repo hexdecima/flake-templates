@@ -2,3 +2,4 @@
 channel = "1.88.0" # change this.
 components = [ "rustc", "cargo", "rust-src", "rustfmt", "rust-analyzer", "clippy" ]
 profile = "default"
+targets = [ "x86_64-unknown-linux-gnu" ]

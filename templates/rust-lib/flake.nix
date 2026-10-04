@@ -15,13 +15,14 @@
   in {
     devShells = eachSystem (pkgs: let 
       toolchain = (readToml ./rust-toolchain.toml).toolchain;
-      rustBin = pkgs.pkgsBuildHost.rust-bin.fromRustupToolchain {
+      rust = pkgs.pkgsBuildHost.rust-bin.fromRustupToolchain {
         inherit (toolchain) channel components targets; 
       };
     in {
-      default = pkgs.mkShell { packages = with pkgs; [ 
-        rustBin just bacon nil nixfmt taplo 
-      ];
+      default = pkgs.mkShell { 
+        packages = (with pkgs; [ 
+          just bacon nil nixfmt taplo 
+        ]) ++ [ rust ];
       };
     });
   };
